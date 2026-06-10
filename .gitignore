@@ -1,0 +1,34 @@
+# Data files (large, not for git)
+data/raw/
+data/processed/*.h5ad
+data/processed/*.csv
+data/real_bulk/
+*.npy
+*.npz
+
+# Results (reproducible outputs, not source)
+results/
+
+# Manuscript drafts (not code)
+manuscript/
+
+# Logs
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.eggs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary
+*.tmp
+*.bak

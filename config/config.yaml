@@ -1,0 +1,220 @@
+# CalibDeconv v1 - Global Configuration
+# All random seeds are fixed for reproducibility.
+
+project:
+  name: CalibDeconv-v1
+  version: 0.1.0
+  description: >
+    Conformal uncertainty calibration for reliable cellular
+    deconvolution of bulk transcriptomes.
+  seed: 42
+  # Debug mode: uses 200 pseudo-bulk / 20 ensemble / 2000 HVG
+  # Set to false for medium/full runs.
+  debug: false
+
+# ---- Data Sources ----
+data:
+  # ---- scRNA-seq reference ----
+  # FORMAL DATA SOURCE (Paper 1, Figure 2/3):
+  #   Hao et al. 2021 (Cell) PBMC CITE-seq reference, via CZ CELLxGENE.
+  #   - 161,764 cells, 8 donors (P1-P8), 10x 3' v3, all healthy/normal.
+  #   - 30 fine-grained cell types -> mapped to 7 major lineages by
+  #     scripts/00b_prepare_hao2021.py.
+  #   - DOI: 10.1016/j.cell.2021.04.048
+  #   - File: data/raw/hao2021_pbmc_full.h5ad (raw -> pbmc_reference.h5ad)
+  #
+  # Real bulk + FACS benchmark (Figure 5) is SEPARATE — see real_benchmarks
+  # below. Do NOT use Monaco/Newman/Racle as scRNA-seq pseudo-bulk source.
+  #
+  sc_reference:
+    source: "hao2021_cellxgene"
+    url: "https://datasets.cellxgene.cziscience.com/3f3dec10-a48a-4c3d-a96e-8926da82b67e.h5ad"
+    cell_type_column: "cell_type"     # column in adata.obs (set by 00b script)
+    donor_column: "donor_id"          # 8 donors -> enables donor-aware split
+    batch_column: "donor_id"          # treat donor as batch (single platform)
+    use_raw_counts: true              # use adata.raw.X for expression
+    min_cells_per_type: 100
+    min_genes_per_cell: 200
+    # Number of highly-variable genes for ensemble (medium/full mode)
+    n_highly_variable_genes: 5000
+
+  # ---- Public real benchmark(s) ----
+  # DO NOT run Phase 6 (07_real_benchmark.py) until Phases 1–5 are
+  # validated.  The ground-truth pairing, cell-type mapping and gene
+  # identifiers must be manually confirmed before execution.
+  real_benchmarks:
+    - name: "newman2015_pbmc"
+      type: "microarray_facs"
+      source: "CIBERSORT"
+      n_samples: 20
+      tissue: "PBMC"
+      status: "pending_manual_review"
+    - name: "racle2017_melanoma"
+      type: "rnaseq_facs"
+      source: "EPIC"
+      n_samples: 4
+      tissue: "melanoma_lymph_node"
+      status: "pending_manual_review"
+
+# ---- Cell-pool split ratios ----
+# Single cells are split into three disjoint pools BEFORE pseudo-bulk
+# generation.  Cells in "reference" are used only for the signature
+# matrix; cells in "calibration" and "test" are used only for their
+# respective pseudo-bulk samples.  This prevents information leakage.
+#
+# donor_aware: when true and >=6 donors exist, whole donors are assigned
+# to a single pool (reference/calibration/test) so that no donor's cells
+# appear in more than one pool — the strictest form of leakage control.
+cell_pool_split:
+  reference: 0.5
+  calibration: 0.25
+  test: 0.25
+  donor_aware: true
+
+# ---- Pseudo-bulk Generation ----
+pseudobulk:
+  n_samples: 3000              # total pseudo-bulk samples (cal + test)
+  total_cells_per_sample: 500  # N cells per pseudo-bulk sample
+  aggregation: "sum"           # "sum" (raw counts) or "mean"
+  # Normalization applied AFTER aggregation on all pseudo-bulks jointly:
+  normalization: "cpm"         # "cpm" | "tpm" | "none"
+  dirichlet_alpha: 1.0         # Dirichlet concentration (1.0 = uniform)
+  # Debug overrides (applied when project.debug = true)
+  debug:
+    n_samples: 200
+  # Medium-mode overrides (use --n-samples 1000 on CLI, or this default)
+  medium:
+    n_samples: 1000
+
+# ---- NNLS Baseline ----
+nnls:
+  normalize_proportions: true   # normalise output proportions to sum=1
+  # Expression-scale consistency:
+  #   Both signature AND pseudo-bulk use the SAME normalisation
+  #   (CPM or raw counts) before NNLS is run.
+  expression_scale: "cpm"       # "cpm" | "raw"
+
+# ---- Ensemble Uncertainty ----
+ensemble:
+  n_iterations: 100             # B: number of bootstrap iterations
+  gene_sampling_fraction: 0.8   # fraction of genes to keep each iteration
+  cell_sampling_fraction: 0.8   # fraction of reference cells per cell type
+  noise_std: 0.0                # optional Gaussian noise std (0=off)
+  quantiles: [0.05, 0.25, 0.75, 0.95]
+  # Debug overrides
+  debug:
+    n_iterations: 20
+
+# ---- Conformal Calibration ----
+conformal:
+  nominal_coverages: [0.80, 0.90, 0.95]
+  nonconformity_score: "absolute_error"  # "absolute_error" | "normalized_residual"
+  per_cell_type: true           # calibrate per cell type vs globally
+  # Boundary handling: proportion estimates must lie in [0, 1].
+  # We compute TWO versions:
+  #   raw  : unclipped intervals (may exceed [0,1])
+  #   clip : intervals clipped to [0,1]
+  # Both are reported with their own coverage and width.
+  clip_intervals: true
+
+# ---- Stress Testing (three tiers) ----
+stress_test:
+  # Tier 1 — signal degradation
+  tier1_noise_dropout_depth:
+    - name: "baseline"
+      description: "No perturbation (reference point)"
+    - name: "gaussian_noise_low"
+      description: "Additive Gaussian noise σ=0.1"
+      noise_std: 0.1
+    - name: "gaussian_noise_med"
+      description: "Additive Gaussian noise σ=0.5"
+      noise_std: 0.5
+    - name: "gaussian_noise_high"
+      description: "Additive Gaussian noise σ=1.0"
+      noise_std: 1.0
+    - name: "dropout_low"
+      description: "Random gene dropout 10%"
+      dropout_rate: 0.1
+    - name: "dropout_med"
+      description: "Random gene dropout 30%"
+      dropout_rate: 0.3
+    - name: "dropout_high"
+      description: "Random gene dropout 50%"
+      dropout_rate: 0.5
+    - name: "low_depth_25"
+      description: "Subsample to 25% depth"
+      depth_fraction: 0.25
+    - name: "low_depth_10"
+      description: "Subsample to 10% depth"
+      depth_fraction: 0.10
+
+  # Tier 2 — reference/sample mismatch
+  tier2_batch_reference:
+    - name: "batch_shift_small"
+      description: "Mean shift 0.5 on 50% of samples"
+      shift_size: 0.5
+    - name: "batch_shift_large"
+      description: "Mean shift 2.0 on 50% of samples"
+      shift_size: 2.0
+    - name: "reference_reduction_1"
+      description: "Remove 1 cell type from reference"
+      n_remove_types: 1
+    - name: "reference_reduction_2"
+      description: "Remove 2 cell types from reference"
+      n_remove_types: 2
+    - name: "rare_cell_low"
+      description: "One cell type at 1% mean proportion"
+      rare_fraction: 0.01
+    - name: "rare_cell_ultralow"
+      description: "One cell type at 0.1% mean proportion"
+      rare_fraction: 0.001
+
+  # Tier 3 — distribution shift (out-of-distribution)
+  tier3_ood:
+    - name: "missing_cell_type_1"
+      description: "Bulk contains 1 cell type absent from reference"
+      n_missing_types: 1
+    - name: "missing_cell_type_2"
+      description: "Bulk contains 2 cell types absent from reference"
+      n_missing_types: 2
+    - name: "cross_donor"
+      description: "Reference and pseudo-bulk from different donors"
+    - name: "cross_dataset"
+      description: "Reference and pseudo-bulk from different datasets"
+
+# ---- Evaluation ----
+evaluation:
+  accuracy_metrics:
+    - "MAE"
+    - "RMSE"
+    - "Pearson"
+    - "CCC"
+  uncertainty_metrics:
+    - "coverage"
+    - "interval_width"
+    - "pearson_correlation"     # uncertainty vs error
+  failure_detection:
+    threshold_quantile: 0.9    # top 10% uncertainty = flagged
+    metrics:
+      - "AUROC"
+      - "AUPRC"
+
+# ---- QC checks (applied after every script) ----
+qc:
+  checks:
+    - "n_samples"
+    - "n_genes"
+    - "n_cell_types"
+    - "proportion_sum"         # each sample sum ≈ 1.0
+    - "any_na"                 # no missing values
+    - "any_negative"           # no negative values
+    - "any_infinite"           # no infinite values
+  proportion_sum_tolerance: 0.01
+
+# ---- Paths (relative to project root) ----
+paths:
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  results: "results"
+  figures: "results/figures"
+  logs: "logs"
