@@ -1,0 +1,9 @@
+pool,donor_id
+reference,P3
+reference,P4
+reference,P5
+reference,P8
+calibration,P2
+calibration,P7
+test,P1
+test,P6

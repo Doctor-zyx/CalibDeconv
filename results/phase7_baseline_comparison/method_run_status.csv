@@ -1,0 +1,11 @@
+method,status,note
+NNLS,SUCCESS,frozen Phase 2 baseline
+CalibDeconv ensemble,SUCCESS,frozen Phase 3 output
+nu-SVR,SUCCESS,"sklearn NuSVR, nu=0.5, linear kernel"
+OLS,SUCCESS,"unconstrained LS, clipped to non-negative, normalized"
+MuSiC,FAILED,R package; rpy2 not installed
+CIBERSORTx,FAILED,"web-only, Stanford license required"
+quanTIseq,FAILED,R/Bioconductor; rpy2 not installed
+Scaden,FAILED,Python DL package not installed
+TAPE,FAILED,Python package not installed
+EpiDISH,FAILED,R package; rpy2 not installed

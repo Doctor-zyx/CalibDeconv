@@ -1,0 +1,4 @@
+nominal_coverage,cell_type,empirical_coverage_raw,mean_interval_width_raw,empirical_coverage_clip,mean_interval_width_clip
+0.8,overall,0.8788,0.292578594644686,0.8788,0.24748999565292207
+0.9,overall,0.95,0.34964439848157214,0.95,0.28883984181919364
+0.95,overall,0.974,0.3880742186187855,0.974,0.3159628956922343

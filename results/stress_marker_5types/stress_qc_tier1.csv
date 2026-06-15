@@ -1,0 +1,10 @@
+scenario,has_na,has_inf,row_sum_min,row_sum_max,index_aligned,columns_aligned
+baseline,False,False,0.9999998901039362,1.0000001202570274,True,True
+gaussian_noise_low,False,False,0.9999998864950612,1.00000011533848,True,True
+gaussian_noise_medium,False,False,0.9999998591374606,1.0000001266598701,True,True
+gaussian_noise_high,False,False,0.9999998587009031,1.000000131316483,True,True
+dropout_low,False,False,0.9999998984858394,1.0000001371772669,True,True
+dropout_medium,False,False,0.9999998769490048,1.0000001043081284,True,True
+dropout_high,False,False,0.9999998807907104,1.00000009679934,True,True
+low_depth_medium,False,False,0.9999998805578798,1.0000001121661626,True,True
+low_depth_high,False,False,0.9999998947605491,1.0000001147855073,True,True

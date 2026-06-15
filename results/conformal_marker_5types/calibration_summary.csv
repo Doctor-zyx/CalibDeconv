@@ -1,0 +1,4 @@
+nominal_coverage,empirical_coverage_raw,empirical_coverage_clip,mean_interval_width_raw,mean_interval_width_clip,point_estimate_source,uncertainty_source,score_function,n_cal,n_test,gene_set,cell_type_set
+0.8,0.8788,0.8788,0.292578594644686,0.24748999565292207,ensemble_mean,phase3_ensemble_summary,absolute_error,500,500,markers,5type
+0.9,0.95,0.95,0.34964439848157214,0.28883984181919364,ensemble_mean,phase3_ensemble_summary,absolute_error,500,500,markers,5type
+0.95,0.974,0.974,0.3880742186187855,0.3159628956922343,ensemble_mean,phase3_ensemble_summary,absolute_error,500,500,markers,5type

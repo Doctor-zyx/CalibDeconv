@@ -1,0 +1,2 @@
+ablation,setting,MAE,CCC,ue_corr,coverage90,width90
+1_point_estimate,ensemble_mean,0.08131046613515594,0.8477429990014917,0.6265585330801744,,

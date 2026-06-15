@@ -1,0 +1,78 @@
+# Data files (large, download via scripts)
+data/
+
+# Old figure drafts (publication figures are in submission_package/)
+results/figures/
+results/figures_main_final/
+results/figures_main_final_backup_before_publication_sync/
+results/figures_manuscript/
+results/figures_publication_draft/
+results/figures_supplementary_draft/
+
+# Intermediate markdown reports
+results/*.md
+
+# Manuscript working files (all versions kept locally, not in repo)
+manuscript/
+submission_package/*.docx
+submission_package/稿件修改/
+submission_package/CalibDeconv_目标期刊投稿策略.docx
+
+# Stray PDFs in root
+/*.pdf
+
+# Large intermediate result files
+results/ens_test_noperturb/
+results/ens_test_noperturb_full/
+results/nnls/
+results/nnls_hvg3000_7types/
+results/nnls_markers/
+results/ensemble/
+results/real_benchmark/
+results/pseudobulk/
+results/stress/
+results/nnls_comparison/
+*.npy
+
+# Old/intermediate figure files in submission_package
+submission_package/Figure1_revise.png
+submission_package/Figure_1_revise.png
+submission_package/Figure1_v2.0.png
+submission_package/CalibDeconv_manuscript.pdf
+submission_package/CalibDeconv_manuscript_revised_sync.docx
+
+# Stray downloaded papers
+s41592-026-03007-y(1).pdf
+
+# Exclude results markdown reports but keep CSV data
+results/**/*.md
+results/*.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Logs
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary
+*.tmp
+*.bak
+
+# Jupyter
+.ipynb_checkpoints/
