@@ -41,6 +41,24 @@ submission_package/Figure1_v2.0.png
 submission_package/CalibDeconv_manuscript.pdf
 submission_package/CalibDeconv_manuscript_revised_sync.docx
 
+# SDY67 exploratory (unresolved, not in manuscript)
+results/sdy67_*/
+figures/sdy67*/
+scripts/12_sdy67_*.py
+scripts/13_sdy67_*.py
+scripts/14_sdy67_*.py
+scripts/sdy67_method_test.py
+scripts/archive/
+
+# Internal audit intermediate results
+results/signature_consistency_audit/
+
+# Submission-ready folder (derived copies of existing results)
+submission_package/submission_ready/
+
+# Word temp files
+~$*.docx
+
 # Stray downloaded papers
 s41592-026-03007-y(1).pdf
 

@@ -9,7 +9,7 @@
 
 ## Overview
 
-CalibDeconv is a reliability-focused framework for cellular deconvolution of PBMC bulk transcriptomes. It combines:
+CalibDeconv is a post-hoc reliability calibration layer for cellular deconvolution of PBMC bulk transcriptomes, not a new deconvolution model. It combines:
 
 - **Frozen marker-based NNLS** for cell-type proportion estimation (5 types: T cell, B cell, NK cell, Monocyte, DC)
 - **Bootstrap ensemble** (50 iterations) for uncertainty quantification
@@ -105,7 +105,7 @@ python scripts/20_redraw_all_supp_figs.py
 
 ## Citation
 
-Zhang Y. CalibDeconv: conformal calibration of prediction intervals for PBMC-domain deconvolution from bulk transcriptomes. (2025). Manuscript in preparation.
+Zhang Y. CalibDeconv: conformal calibration of prediction intervals for PBMC-domain deconvolution from bulk transcriptomes. (2026). Manuscript submitted.
 
 ## License
 
