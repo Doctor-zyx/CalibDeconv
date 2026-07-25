@@ -46,17 +46,61 @@ def apply_gaussian_noise(bulk: pd.DataFrame, noise_std: float = 0.5, seed: int =
     return result
 
 
-def apply_low_depth(bulk: pd.DataFrame, depth_fraction: float = 0.25, seed: int = 42) -> pd.DataFrame:
-    """Binomial down-sampling to simulate low sequencing depth."""
+def apply_low_depth(bulk: pd.DataFrame, depth_fraction: float = 0.25, seed: int = 42,
+                    raw_counts: pd.DataFrame = None) -> pd.DataFrame:
+    """Binomial down-sampling to simulate low sequencing depth.
+
+    Parameters
+    ----------
+    bulk : pd.DataFrame
+        Expression matrix (CPM or counts) used for column alignment.
+    depth_fraction : float
+        Fraction of reads to retain (e.g. 0.25 = 25%).
+    seed : int
+        Random seed.
+    raw_counts : pd.DataFrame, optional
+        Raw integer read counts for the same samples/genes.
+        If provided, binomial thinning is applied to these counts
+        and the result is converted back to CPM. This gives true
+        library-depth downsampling.
+        If None, falls back to thinning integerized CPM values
+        (legacy behavior).
+
+    Returns
+    -------
+    pd.DataFrame
+        Thinned expression matrix in the same space as the input
+        (CPM if raw_counts was provided, otherwise same as input).
+    """
     rng = np.random.default_rng(seed)
-    result = bulk.copy()
-    counts = result.values.astype(int)
-    for i in range(counts.shape[0]):
-        for j in range(counts.shape[1]):
-            if counts[i, j] > 0:
-                counts[i, j] = rng.binomial(counts[i, j], depth_fraction)
-    result.values[:] = counts.astype(float)
-    logger.info("Low depth fraction=%.2f", depth_fraction)
+
+    if raw_counts is not None:
+        # True library-depth downsampling from raw counts -> CPM
+        counts = raw_counts.loc[bulk.index, bulk.columns].values.astype(int)
+        thinned = np.empty_like(counts)
+        for i in range(counts.shape[0]):
+            for j in range(counts.shape[1]):
+                if counts[i, j] > 0:
+                    thinned[i, j] = rng.binomial(counts[i, j], depth_fraction)
+                else:
+                    thinned[i, j] = 0
+        # Convert thinned raw counts to CPM
+        row_sums = thinned.sum(axis=1, keepdims=True)
+        row_sums = np.maximum(row_sums, 1)  # avoid division by zero
+        cpm = thinned / row_sums * 1e6
+        result = pd.DataFrame(cpm, index=bulk.index, columns=bulk.columns)
+        logger.info("Low depth fraction=%.2f (raw count downsampling -> CPM)", depth_fraction)
+    else:
+        # Legacy: thinning integerized CPM values
+        result = bulk.copy()
+        counts = result.values.astype(int)
+        for i in range(counts.shape[0]):
+            for j in range(counts.shape[1]):
+                if counts[i, j] > 0:
+                    counts[i, j] = rng.binomial(counts[i, j], depth_fraction)
+        result.values[:] = counts.astype(float)
+        logger.info("Low depth fraction=%.2f (integerized-CPM thinning, no raw counts)", depth_fraction)
+
     return result
 
 

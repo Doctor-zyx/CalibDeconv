@@ -207,10 +207,19 @@ def evaluate_calibration(
 # ── Internal helpers ───────────────────────────────────────────────────────
 
 def _conformal_quantile(scores: np.ndarray, alpha: float, n_cal: int) -> float:
-    """Compute the conformal quantile q̂.
+    """Compute the conformal quantile q̂ as an exact order statistic.
 
-    q̂ = the ⌈(n_cal + 1)(1 − α)⌉-th smallest score.
+    q̂ = s_{(k)}  where  k = min(max(⌈(n+1)(1−α)⌉, 1), n)
+    and s_{(1)} ≤ … ≤ s_{(n)} are the ordered calibration scores.
+
+    This avoids interpolation artifacts from numpy.quantile and directly
+    returns the k-th smallest calibration score.
     """
-    level = np.ceil((n_cal + 1) * (1 - alpha)) / n_cal
-    level = min(max(level, 0.0), 1.0)
-    return float(np.quantile(scores, level))
+    scores = np.asarray(scores, dtype=float)
+    n = scores.size
+    if n == 0:
+        raise ValueError("Calibration scores must not be empty.")
+    k = int(np.ceil((n + 1) * (1 - alpha)))
+    k = min(max(k, 1), n)
+    # np.partition is O(n) — faster than full sort for a single order statistic
+    return float(np.partition(scores, k - 1)[k - 1])

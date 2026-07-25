@@ -236,7 +236,7 @@ def main():
     g90 = intervals[intervals["nominal_coverage"] == lvl90]
     plt.figure(figsize=(6, 5))
     data = [g90[g90["cell_type"] == ct]["interval_width_clip"].values for ct in CANON]
-    plt.boxplot(data, labels=CANON)
+    plt.boxplot(data, tick_labels=CANON)
     plt.ylabel(f"Clipped interval width @ {int(lvl90*100)}%")
     plt.title("Conformal interval width by cell type (marker_5type)")
     plt.tight_layout()

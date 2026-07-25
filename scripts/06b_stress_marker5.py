@@ -123,7 +123,7 @@ def rejection_curve(abs_err, score, n_points=20):
     return pd.DataFrame(rows)
 
 
-def perturb(kind, X, params, seed):
+def perturb(kind, X, params, seed, raw_counts=None):
     if kind == "none":
         return X.copy()
     if kind == "gaussian":
@@ -131,7 +131,8 @@ def perturb(kind, X, params, seed):
     if kind == "dropout":
         return apply_dropout(X, dropout_rate=params["dropout_rate"], seed=seed)
     if kind == "low_depth":
-        return apply_low_depth(X, depth_fraction=params["depth_fraction"], seed=seed)
+        return apply_low_depth(X, depth_fraction=params["depth_fraction"], seed=seed,
+                               raw_counts=raw_counts)
     raise ValueError(f"unknown perturbation kind: {kind}")
 
 
@@ -183,6 +184,18 @@ def main():
     y_test = pd.read_csv(paths["true_test"], index_col=0)[CANON]
     y_test.index.name = "sample_id"
 
+    # Load raw counts for true library-depth downsampling
+    raw_counts_path = proc_dir / "pseudobulk_matrix_test.csv"
+    if raw_counts_path.exists():
+        X_test_raw = pd.read_csv(raw_counts_path, index_col=0)[gene_panel]
+        logger.info("Raw counts loaded from %s (shape %s, sum range %.0f-%.0f)",
+                    raw_counts_path, X_test_raw.shape,
+                    X_test_raw.sum(axis=1).min(), X_test_raw.sum(axis=1).max())
+    else:
+        X_test_raw = None
+        logger.warning("Raw counts not found at %s — low_depth will use integerized-CPM fallback",
+                       raw_counts_path)
+
     # Conformal quantiles (calibrated ONCE on clean cal data in Phase 4)
     quantiles = pd.read_csv(conf_dir / "conformal_quantiles.csv")
 
@@ -207,7 +220,7 @@ def main():
 
     for name, kind, params, severity in TIER1:
         sc_seed = args.seed + abs(hash(name)) % 10000
-        Xp = perturb(kind, X_test_clean, params, sc_seed)[gene_panel]
+        Xp = perturb(kind, X_test_clean, params, sc_seed, raw_counts=X_test_raw)[gene_panel]
         assert list(Xp.index) == true_order and list(Xp.columns) == gene_panel
 
         preds = fast_ensemble(

@@ -262,7 +262,9 @@ axA.plot([0,1],[0,1],'--',color='#AAAAAA',lw=1)
 axA.set_xlabel('FACS-derived fraction'); axA.set_ylabel('Predicted proportion')
 axA.set_xlim(0,1); axA.set_ylim(0,1)
 axA.set_title('Observed vs predicted (4-class, n = 14)', fontsize=9)
-axA.text(0.05, 0.92, 'MAE = 0.332\nCCC = 0.021', transform=axA.transAxes, fontsize=7.5, va='top',
+_mae6 = np.abs(gt6.values - pred6.values).mean()
+_ccc6 = 2 * ((gt6.values.ravel()-gt6.values.ravel().mean())*(pred6.values.ravel()-pred6.values.ravel().mean())).mean() / (gt6.values.ravel().var()+pred6.values.ravel().var()+(gt6.values.ravel().mean()-pred6.values.ravel().mean())**2) if (gt6.values.ravel().var()+pred6.values.ravel().var()+(gt6.values.ravel().mean()-pred6.values.ravel().mean())**2) > 0 else 0
+axA.text(0.05, 0.92, f'MAE = {_mae6:.3f}\nCCC = {_ccc6:.3f}', transform=axA.transAxes, fontsize=7.5, va='top',
          bbox=dict(boxstyle='round',fc='white',ec='#CCC'))
 axA.legend(fontsize=6.5, frameon=False, loc='lower right')
 panel_label(axA, 'a')

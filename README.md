@@ -105,7 +105,7 @@ python scripts/20_redraw_all_supp_figs.py
 
 ## Citation
 
-Zhang Y. CalibDeconv: conformal calibration of prediction intervals for PBMC-domain deconvolution from bulk transcriptomes. (2026). Manuscript submitted.
+Zhou Y.-X., Ding P., Gu B.-Y., Yin H.-Y., and Gu W.-J. CalibDeconv: conformal calibration of prediction intervals for PBMC-domain deconvolution from bulk transcriptomes. (2026). Manuscript submitted.
 
 ## License
 
