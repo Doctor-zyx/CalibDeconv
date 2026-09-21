@@ -50,9 +50,9 @@ cp("results/conformal_marker_5types/nonconformity_scores.csv", f3, "nonconformit
 
 # === Figure 4: Stress testing ===
 f4 = cpdir("Figure4_stress_testing")
-cp("results/stress_marker_5types/stress_summary_tier1_corrected.csv", f4, "stress_summary.csv")
-cp("results/stress_marker_5types/failure_detection_tier1_corrected.csv", f4, "failure_detection_auroc.csv")
-cp("results/stress_marker_5types/rejection_curves_tier1_corrected.csv", f4, "rejection_curves.csv")
+cp("results/stress_marker_5types/stress_summary_tier1.csv", f4, "stress_summary.csv")
+cp("results/stress_marker_5types/failure_detection_tier1.csv", f4, "failure_detection_auroc.csv")
+cp("results/stress_marker_5types/rejection_curves_tier1.csv", f4, "rejection_curves.csv")
 cp("results/stress_marker_5types/stress_per_celltype_tier1.csv", f4, "stress_per_celltype.csv")
 
 # === Figure 5: Reference reduction / ablation ===

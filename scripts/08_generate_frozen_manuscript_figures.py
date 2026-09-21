@@ -2,6 +2,19 @@
 """
 Generate manuscript figures from FROZEN results only.
 
+SUPERSEDED — do not use for publication figures. Kept for provenance only.
+
+This script predates the v1.1 revision and still reads the
+`stress_summary_tier1_corrected.csv` / `rejection_curves_tier1_corrected.csv`
+snapshots, which were written in June 2026 and were NOT regenerated when Tier 1
+was re-run in v1.1 (exact conformal quantile, count-based depth thinning). Two
+of its panels also depend on `reject_high_delta_vs_all`, a column that exists
+only in those superseded snapshots. Its Figure 4/5 output therefore disagrees
+with the published figures.
+
+Use `scripts/10_publication_figures.py`, which reads the v1.1 Tier 1 files.
+Output here goes to results/figures_manuscript/ and is not part of any release.
+
 NO new experiments, NO ensemble/conformal re-runs, NO downloads, NO Tier 3.
 Reads only existing result CSVs; writes ONLY to results/figures_manuscript/.
 Does not modify or overwrite any existing core result file.

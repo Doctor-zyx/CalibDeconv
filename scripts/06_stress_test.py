@@ -27,6 +27,7 @@ Usage::
 
 import argparse
 import sys
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -84,7 +85,10 @@ def run_one_scenario(
     sig_norm: pd.DataFrame, seed: int, logger,
 ) -> dict:
     """Run a single stress scenario and return metrics."""
-    sc_seed = seed + hash(name) % 10000
+    # zlib.crc32 is a stable checksum; the builtin hash() of a str is salted
+    # per process unless PYTHONHASHSEED is set, which made this seed -- and
+    # therefore the whole scenario -- irreproducible across runs (v1.2.1 fix).
+    sc_seed = seed + zlib.crc32(name.encode("utf-8")) % 10000
 
     if name == "baseline":
         perturbed = X_test.copy()

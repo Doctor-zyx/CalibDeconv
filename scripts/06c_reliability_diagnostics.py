@@ -46,6 +46,22 @@ TIER1 = [
     ("low_depth_high", "low_depth", {"depth_fraction": 0.10}, 0.90),
 ]
 
+# v1.2.1: must stay identical to SCENARIO_SEEDS in 06b_stress_marker5.py, so
+# that the diagnostics are computed on the same ensembles as the Tier 1
+# summary. Previously both derived seeds from `abs(hash(name))`, which Python
+# randomises per process, so the two scripts silently disagreed within a run.
+SCENARIO_SEEDS = {
+    "baseline": 7201,
+    "gaussian_noise_low": 7202,
+    "gaussian_noise_medium": 7203,
+    "gaussian_noise_high": 7204,
+    "dropout_low": 7205,
+    "dropout_medium": 7206,
+    "dropout_high": 7207,
+    "low_depth_medium": 7208,
+    "low_depth_high": 7209,
+}
+
 
 def perturb(kind, X, params, seed):
     if kind == "none": return X.copy()
@@ -90,7 +106,9 @@ def main():
     RETAIN = [0.9, 0.75, 0.5, 0.25]
 
     for name, kind, params, sev in TIER1:
-        seed = 42 + abs(hash(name)) % 10000
+        # v1.2.1: explicit per-scenario seeds (see SCENARIO_SEEDS in
+        # 06b_stress_marker5.py); `abs(hash(name))` was process-dependent.
+        seed = SCENARIO_SEEDS[name]
         Xp = perturb(kind, Xc, params, seed)[gene_panel]
         preds = fast_ensemble(X_panel=Xp.values.astype(np.float64),
                               per_type_arrays=arrs, per_type_totals=tots,

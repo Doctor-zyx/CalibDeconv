@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 """
+SUPERSEDED — not part of the canonical workflow. Kept for provenance only.
+
+Despite the name, this script never corrected any value: it copies
+stress_summary_tier1.csv and appends diagnostic columns (primary_score,
+spearman, rejection deltas). "Corrected" referred to adopting mean_std as the
+primary reliability score.
+
+Its outputs were last written in June 2026 and were NOT regenerated when Tier 1
+was re-run in v1.1, so the archived copies in results/legacy_pre_v1.1/ disagree
+with results/stress_marker_5types/stress_summary_tier1.csv. No publication
+script reads them any more; Figures 4 and 5 use the Tier 1 files directly.
+
 Regenerate CORRECTED Phase 5 Tier 1 reports + figures from EXISTING results.
 
 Does NOT re-run ensemble / stress prediction. Reads:

@@ -106,6 +106,53 @@ python scripts/10_publication_figures.py
 python scripts/20_redraw_all_supp_figs.py
 ```
 
+## Publication figures
+
+`scripts/10_publication_figures.py` is the canonical generator for main
+Figures 1–5. There is no second plotting pipeline.
+
+Canonical inputs for the two stress-related figures:
+
+| Figure | Input files |
+|---|---|
+| Figure 4 (stress tests) | `results/stress_marker_5types/stress_summary_tier1.csv`<br>`results/stress_marker_5types/rejection_curves_tier1.csv` |
+| Figure 5 (reference ablation) | `results/stress_marker_5types/stress_summary_tier1.csv`<br>`results/stress_marker_5types/rejection_curves_tier1.csv`<br>`results/stress_marker_5types_tier2_subset/stress_summary_tier2_subset.csv` |
+
+Do **not** use the `*_corrected.csv` files in `results/legacy_pre_v1.1/`. They
+are June 2026 snapshots that were not regenerated when Tier 1 was re-run in
+v1.1, and despite the name they never corrected any value — the script that
+produced them only appended diagnostic columns. No current script reads them.
+
+## Reproducibility limitations
+
+**Tier 1 stress and reliability diagnostics are not bit-reproducible.** Until
+v1.2.1, `scripts/06b_stress_marker5.py`, `06c_reliability_diagnostics.py`,
+`06d_stress_tier2_subset.py` and `06_stress_test.py` derived their per-scenario
+seeds from `abs(hash(scenario_name))`. Python salts the hash of a `str`
+per process unless `PYTHONHASHSEED` is set, which this project never set, so
+every run drew different seeds. v1.2.1 replaces these with explicit numeric
+constants (`SCENARIO_SEEDS`), but the seeds that produced the archived Tier 1
+CSVs cannot be recovered.
+
+Consequences:
+
+- The archived files in `results/stress_marker_5types/` remain the frozen
+  record behind the manuscript and Figures 4–5. They are **not** overwritten.
+- Re-running `06b`/`06c` reproduces the qualitative pattern — dropout is the
+  dominant degradation axis, coverage falls below nominal under moderate and
+  severe dropout, library-depth reduction has little effect — but not the
+  archived numbers to the last decimal.
+- The reference-ablation scenario had a second, larger problem: the ablated
+  cell type was drawn with `rng.choice()` from the same unstable seed, so DC
+  was ablated in only about 21% of runs. v1.2.1 fixes the ablated type to DC
+  (`ABLATED_CELL_TYPE`) and pins the scenario seed, which reproduces the
+  archived MAE and CCC to within bootstrap-ensemble noise.
+- `coverage90_clip` for the reference-ablation scenario cannot match the
+  archive even with the original seed: v1.1 replaced the interpolating
+  `np.quantile` conformal quantile with an exact order statistic. Point-estimate
+  metrics (MAE, CCC) and the uncertainty diagnostics are unaffected by that
+  change.
+
 ## Composition-level coverage analyses
 
 Two standalone analyses score the **already-frozen** CalibDeconv outputs. They are

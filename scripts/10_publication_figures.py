@@ -373,9 +373,11 @@ BASE_GREY = "#4D4D4D"
 
 
 def figure4():
-    s = pd.read_csv(R / "stress_marker_5types" / "stress_summary_tier1_corrected.csv")
-    rej = pd.read_csv(R / "stress_marker_5types" / "rejection_curves_tier1_corrected.csv")
-    rej = rej[rej.score_name == "mean_std"]
+    # Tier 1 stress results were regenerated in v1.1 (exact conformal quantile,
+    # count-based depth thinning). The *_corrected.csv files predate that rerun
+    # and only ever added diagnostic columns, so they are not used here.
+    s = pd.read_csv(R / "stress_marker_5types" / "stress_summary_tier1.csv")
+    rej = pd.read_csv(R / "stress_marker_5types" / "rejection_curves_tier1.csv")
 
     base = s[s.perturbation == "none"].iloc[0]
     fams = ["gaussian", "dropout", "low_depth"]
@@ -436,15 +438,18 @@ def figure4():
             ("baseline", BASE_GREY, "Baseline", 6),
             ("low_depth_high", PERT_COLOR["low_depth"], "Low depth (high)", -7)]
     for sc, col, lab, dy in reps:
-        d = rej[rej.scenario == sc].sort_values("retained_fraction")
-        axD.plot(d["retained_fraction"], d["reject_high_mae"], "-o", lw=1.3, ms=4,
+        d = rej[rej.scenario == sc].sort_values("fraction_retained")
+        axD.plot(d["fraction_retained"], d["reject_high_mae"], "-o", lw=1.3, ms=4,
                  color=col, markeredgecolor="white", markeredgewidth=0.5)
-        x_end = d.retained_fraction.max()
-        y_end = d[d.retained_fraction == x_end]["reject_high_mae"].values[0]
+        x_end = d.fraction_retained.max()
+        y_end = d[d.fraction_retained == x_end]["reject_high_mae"].values[0]
         axD.annotate(lab, (x_end, y_end), textcoords="offset points", xytext=(7, dy),
                      ha="left", va="center", fontsize=6.8, color=col, fontweight="bold")
     axD.set_xlim(0.15, 1.55)
-    axD.set_ylim(0.055, 0.116)          # headroom above the flat dropout curve
+    # Data-driven limits: a hardcoded ceiling tuned for the pre-v1.1 curves
+    # collides with the annotation now that dropout_high peaks at ~0.110.
+    all_mae = rej["reject_high_mae"].dropna()
+    axD.set_ylim(all_mae.min() * 0.92, all_mae.max() * 1.06)
     axD.set_xticks([0.2, 0.4, 0.6, 0.8])
     axD.set_xlabel("Fraction retained"); axD.set_ylabel("Retained-set MAE")
     axD.set_title("Uncertainty-guided rejection", fontsize=9)
@@ -471,9 +476,22 @@ C_DROP = "#C44E52"     # high dropout = red
 
 def figure5():
     import matplotlib.gridspec as gridspec
-    t1 = pd.read_csv(R / "stress_marker_5types" / "stress_summary_tier1_corrected.csv").set_index("scenario")
+    # See figure4(): use the v1.1-regenerated Tier 1 files, not the *_corrected
+    # snapshots. Tier 2 was not regenerated in v1.1 and is used as archived.
+    t1 = pd.read_csv(R / "stress_marker_5types" / "stress_summary_tier1.csv").set_index("scenario")
     t2 = pd.read_csv(R / "stress_marker_5types_tier2_subset" / "stress_summary_tier2_subset.csv").set_index("scenario")
+    rej = pd.read_csv(R / "stress_marker_5types" / "rejection_curves_tier1.csv")
     b, dh, rr = t1.loc["baseline"], t1.loc["dropout_high"], t2.loc["reference_reduction_1"]
+
+    def reject_delta(scenario_name, stress_row):
+        """reject_high_delta_vs_all at ~50% retained, from the Tier 1 curves.
+
+        stress_summary_tier1.csv does not carry this column (it was appended
+        only to the superseded *_corrected snapshot), so it is recomputed here.
+        """
+        d = rej[rej.scenario == scenario_name]
+        row50 = d.iloc[(d.fraction_retained - 0.5).abs().argsort()[:1]]
+        return float(row50["reject_high_mae"].values[0]) - float(stress_row["MAE"])
     n_test = 500
 
     fig = plt.figure(figsize=(7.6, 6.6))
@@ -532,7 +550,8 @@ def figure5():
     axD = fig.add_subplot(outer[1, 1])
     names = ["Baseline", "DC-removed\n(4-type)", "High\ndropout"]
     cols = [C_BASE, C_REF, C_DROP]
-    impr = [-b.reject_high_delta_vs_all, -rr.reject_high_delta_vs_all, -dh.reject_high_delta_vs_all]
+    impr = [-reject_delta("baseline", b), -rr.reject_high_delta_vs_all,
+            -reject_delta("dropout_high", dh)]
     axD.bar(np.arange(3), impr, width=0.62, color=cols, edgecolor="white", linewidth=0.8)
     for xi, v in zip(np.arange(3), impr):
         axD.text(xi, v + 0.0004, f"{v:.3f}", ha="center", va="bottom", fontsize=7, color=INK)

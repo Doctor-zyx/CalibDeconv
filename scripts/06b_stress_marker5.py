@@ -68,6 +68,30 @@ TIER1 = [
     ("low_depth_high",       "low_depth",{"depth_fraction": 0.10}, 0.90),
 ]
 
+# Explicit numeric seeds, one per Tier 1 scenario (v1.2.1).
+#
+# These replace `args.seed + abs(hash(name)) % 10000`. Python randomises string
+# hashing per process unless PYTHONHASHSEED is set, so that expression produced
+# a different seed on every run.
+#
+# IMPORTANT: the archived Tier 1 CSVs in results/stress_marker_5types/ were
+# produced under the old process-dependent seeds and the originating seeds
+# cannot be recovered. Re-running this script will therefore reproduce the
+# qualitative pattern but not the archived numbers bit-for-bit. The archived
+# files remain the frozen record used by the manuscript and the figures; see
+# the reproducibility note in README.md. Do not overwrite them casually.
+SCENARIO_SEEDS = {
+    "baseline": 7201,
+    "gaussian_noise_low": 7202,
+    "gaussian_noise_medium": 7203,
+    "gaussian_noise_high": 7204,
+    "dropout_low": 7205,
+    "dropout_medium": 7206,
+    "dropout_high": 7207,
+    "low_depth_medium": 7208,
+    "low_depth_high": 7209,
+}
+
 
 # ── metric helpers ──────────────────────────────────────────────────────────
 
@@ -219,7 +243,7 @@ def main():
         return w
 
     for name, kind, params, severity in TIER1:
-        sc_seed = args.seed + abs(hash(name)) % 10000
+        sc_seed = SCENARIO_SEEDS[name]
         Xp = perturb(kind, X_test_clean, params, sc_seed, raw_counts=X_test_raw)[gene_panel]
         assert list(Xp.index) == true_order and list(Xp.columns) == gene_panel
 
