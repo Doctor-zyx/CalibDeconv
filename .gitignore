@@ -1,5 +1,11 @@
 # Data files (large, download via scripts)
-data/
+data/*
+!data/processed/
+data/processed/*
+
+# Exception: the held-out test ground truth (52 KB) is required to reproduce the
+# composition-level simultaneous-coverage analysis from a clean clone.
+!data/processed/true_proportions_test_5type.csv
 
 # Old figure drafts (publication figures are in submission_package/)
 results/figures/
@@ -41,14 +47,16 @@ submission_package/Figure1_v2.0.png
 submission_package/CalibDeconv_manuscript.pdf
 submission_package/CalibDeconv_manuscript_revised_sync.docx
 
-# SDY67 exploratory (unresolved, not in manuscript)
-results/sdy67_*/
-figures/sdy67*/
-scripts/12_sdy67_*.py
-scripts/13_sdy67_*.py
-scripts/14_sdy67_*.py
-scripts/sdy67_method_test.py
+# Exploratory analyses outside the scope of the manuscript
+# (additional local-only patterns live in .git/info/exclude)
 scripts/archive/
+
+# Superseded two-cohort real-bulk scripts and outputs.
+# Replaced by scripts/16_gse107572_real_bulk.py, which reproduces the
+# GSE107572 analysis reported in the manuscript.
+scripts/16_real_bulk_comparison.py
+scripts/17_real_bulk_coverage.py
+results/real_bulk_comparison/
 
 # Internal audit intermediate results
 results/signature_consistency_audit/

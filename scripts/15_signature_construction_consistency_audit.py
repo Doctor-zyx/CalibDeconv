@@ -3,7 +3,7 @@
 SIGNATURE CONSTRUCTION AND MANUSCRIPT CONSISTENCY REMEDIATION
 =============================================================
 
-Parts 1-8 of the signature consistency audit directive.
+Parts 1-7 of the signature consistency audit directive.
 
 Part 1: Exact signature construction proof from code
 Part 2: Manuscript text inconsistency audit (generates CSV)
@@ -12,7 +12,6 @@ Part 4: Full primary benchmark comparison
 Part 5: External PBMC 3k and stress test comparison
 Part 6: Decision rule (A/B/C)
 Part 7: Methods replacement text
-Part 8: SDY67 EPIC positive control validity re-evaluation
 
 Output directory: results/signature_consistency_audit/
 """
@@ -1242,74 +1241,6 @@ affected_df.to_csv(OUT / "AFFECTED_MANUSCRIPT_COMPONENTS.csv", index=False)
 print(f"   [SAVED] AFFECTED_MANUSCRIPT_COMPONENTS.csv")
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PART 8: SDY67 EPIC POSITIVE CONTROL VALIDITY RE-EVALUATION
-# ═══════════════════════════════════════════════════════════════════════════
-print("\n" + "=" * 70)
-print("PART 8: SDY67 EPIC POSITIVE CONTROL VALIDITY RE-EVALUATION")
-print("=" * 70)
-
-epic_answers = {
-    "Q1_official_EPIC_R_package": "NO — we used NNLS with EPIC's published reference matrix, NOT the official EPIC R package",
-    "Q2_EPIC_function_and_version": "N/A — EPIC R package was not called. Used scipy.optimize.nnls with EPIC Supp1A blood reference",
-    "Q3_mRNA_content_scaling": "NO — EPIC uses mRNA proportion weights (mRNA/cell differs by cell type). Our NNLS does not apply these weights",
-    "Q4_uncharacterized_component": "NO — EPIC's model includes an 'otherCells' uncharacterized fraction. Our NNLS forces sum-to-1 across known types only",
-    "Q5_Racle_gene_filtering_and_input_scale": "PARTIAL — we used Racle Supp1A TPM reference (6 cell types). But Racle's actual gene filtering (variability-based selection) was not reproduced. We used our 445 marker panel intersection instead",
-    "Q6_Racle_actual_SDY67_expression_matrix": "NOT CONFIRMED — we used SDY67 EXP14625 raw counts → CPM. Whether Racle used the same file, or a different processing (e.g., their own TPM quantification), is unknown",
-    "Q7_flow_RNA_confirmed_same_visit": "CONFIRMED at donor-level (same Subject Accession, same Day 0), but NOT confirmed at aliquot-level (different Biosample Accessions)",
-}
-
-critical_items_failed = []
-if "NO" in epic_answers["Q1_official_EPIC_R_package"]:
-    critical_items_failed.append("Q1: Not official EPIC package")
-if "NO" in epic_answers["Q3_mRNA_content_scaling"]:
-    critical_items_failed.append("Q3: No mRNA content scaling")
-if "NO" in epic_answers["Q4_uncharacterized_component"]:
-    critical_items_failed.append("Q4: No uncharacterized component")
-if "PARTIAL" in epic_answers["Q5_Racle_gene_filtering_and_input_scale"]:
-    critical_items_failed.append("Q5: Gene filtering not reproduced")
-if "NOT CONFIRMED" in epic_answers["Q6_Racle_actual_SDY67_expression_matrix"]:
-    critical_items_failed.append("Q6: Expression matrix not confirmed identical to Racle's")
-
-print(f"\n   Critical items failed: {len(critical_items_failed)}")
-for item in critical_items_failed:
-    print(f"     - {item}")
-
-sdy67_status = "U"
-sdy67_status_text = "U — Unresolved SDY67 cross-platform benchmark"
-sdy67_recommendation = (
-    "The current SDY67 analysis was not included in the manuscript because exact reproduction "
-    "of the published RNA-flow benchmark, including sample pairing, EPIC algorithm implementation "
-    "(with mRNA proportion weights and uncharacterized cell fraction), and expression preprocessing, "
-    "could not be conclusively established. The so-called EPIC positive control used plain NNLS "
-    "with EPIC's reference matrix, omitting critical algorithmic differences (constrained optimization, "
-    "mRNA/cell weights, uncharacterized fraction). Therefore, the EPIC comparison does not constitute "
-    "a valid positive control."
-)
-
-print(f"\n   SDY67 status: {sdy67_status_text}")
-
-# Write REVISED_SDY67_STATUS.md
-with open(OUT / "REVISED_SDY67_STATUS.md", "w", encoding="utf-8") as f:
-    f.write("# REVISED SDY67 STATUS\n\n")
-    f.write(f"**Date**: {time.strftime('%Y-%m-%d')}\n\n")
-    f.write(f"**Status**: {sdy67_status_text}\n\n")
-    f.write("---\n\n")
-    f.write("## EPIC Positive Control Validity Assessment\n\n")
-    for q, a in epic_answers.items():
-        f.write(f"### {q}\n\n{a}\n\n")
-    f.write("## Critical Failures\n\n")
-    for item in critical_items_failed:
-        f.write(f"- {item}\n")
-    f.write(f"\n## Conclusion\n\n")
-    f.write(f"Since {len(critical_items_failed)} out of 7 critical validity checks failed, ")
-    f.write(f"the previous classification as 'E — Silent external failure' is **withdrawn**.\n\n")
-    f.write(f"**New classification**: {sdy67_status_text}\n\n")
-    f.write(f"**Rationale**: {sdy67_recommendation}\n\n")
-    f.write("## Recommended manuscript language\n\n")
-    f.write("> " + sdy67_recommendation + "\n")
-
-print(f"   [SAVED] REVISED_SDY67_STATUS.md")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1345,10 +1276,6 @@ with open(OUT / "SIGNATURE_REMEDIATION_DECISION.md", "w", encoding="utf-8") as f
     else:
         f.write("The method definition is ambiguous and multiple scripts may use different scales. ")
         f.write("A canonical implementation must be established before proceeding.\n")
-
-    f.write(f"\n## SDY67 status update\n\n")
-    f.write(f"Changed from 'E — Silent external failure' to '{sdy67_status_text}'\n\n")
-    f.write(f"Reason: {sdy67_recommendation}\n")
 
 print(f"\n   [SAVED] SIGNATURE_REMEDIATION_DECISION.md")
 
@@ -1386,17 +1313,15 @@ print(f"   {'A — DESCRIPTION-ONLY CORRECTION' if decision == 'A' else 'B — P
 
 print(f"\n10. Need to rerun main results: {'NO' if decision == 'A' else 'YES'}")
 
-print(f"\n11. SDY67 status: {sdy67_status_text}")
-
-print(f"\n12. Methods replacement text (if decision A):")
+print(f"\n11. Methods replacement text (if decision A):")
 if decision == "A" and len(methods_replacement) > 0:
     print(f"    See PROPOSED_METHODS_REPLACEMENT.md")
 
-print(f"\n13. Affected components:")
+print(f"\n12. Affected components:")
 for _, row in affected_df.iterrows():
     print(f"    {row['component']}: {row['action']} (rerun: {row['rerun_required']})")
 
-print(f"\n14. Output files:")
+print(f"\n13. Output files:")
 for f in sorted(OUT.glob("*")):
     if f.is_file():
         print(f"    {f.name} ({f.stat().st_size:,} bytes)")

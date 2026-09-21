@@ -1,0 +1,16 @@
+interval,n_types_missed,n_samples
+marginal_conformal,0,390
+marginal_conformal,1,95
+marginal_conformal,2,15
+marginal_conformal,only_Monocyte,2
+marginal_conformal,only_NK,33
+marginal_conformal,only_B,7
+marginal_conformal,only_DC,39
+marginal_conformal,only_T_cell,14
+bonferroni_simultaneous_conformal,0,473
+bonferroni_simultaneous_conformal,1,27
+bonferroni_simultaneous_conformal,only_Monocyte,1
+bonferroni_simultaneous_conformal,only_NK,6
+bonferroni_simultaneous_conformal,only_B,1
+bonferroni_simultaneous_conformal,only_DC,12
+bonferroni_simultaneous_conformal,only_T_cell,7

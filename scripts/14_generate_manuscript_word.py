@@ -496,7 +496,7 @@ def build_review_notes():
          "6 SOTA tools could not be run; nu-SVR failed",
          "Verify we do not claim comprehensive superiority"),
         ("6", "Limitations, item 1", "'pending' real-bulk validation",
-         "SDY67 access unresolved; GSE107572 n=9 only",
+         "External PBMC validation: GSE107572 (n=9)",
          "Ensure this limitation is prominent"),
         ("7", "References [1]-[7]", "All 7 references verified PubMed+DOI",
          "No non-PubMed references included in this draft",
