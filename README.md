@@ -50,13 +50,32 @@ Three distinct things, deliberately kept separate:
 | | Purpose |
 |---|---|
 | `requirements.txt` | **Installation.** Broad lower bounds, no upper pins. Use this. |
-| `requirements-v1.2-tested.txt` | **Clean-room validation snapshot.** The exact versions of one independent environment in which the v1.2 coverage analyses were re-run from a clean checkout and reproduced every reported value byte-for-byte. Recorded as evidence that the results do not depend on a single dependency stack. |
+| `requirements-tested.txt` | **Validated environments.** Exact versions of two independent environments — one on pandas 2.x, one on pandas 3.x — in which the analyses were re-run from a clean checkout. |
 | Software versions in the manuscript | **The original analysis environment.** Reported in the manuscript Methods and unchanged. |
 
-The clean-room snapshot is *not* the environment in which the original results
-were produced, and it does not supersede the software versions reported in the
-manuscript. It was built from `requirements.txt` at a later date and therefore
-resolved to newer releases; the reported values were identical in both.
+Neither validated environment is the one in which the original results were
+produced, and neither supersedes the software versions reported in the
+manuscript.
+
+As of v1.2.2 the validated scope covers the **stress scripts as well as the
+coverage scripts** — `06b_stress_marker5.py` (Figure 4),
+`06d_stress_tier2_subset.py` (Figure 5), `15_simultaneous_coverage.py`,
+`16_gse107572_real_bulk.py`, `10_publication_figures.py` and
+`tests/test_stress_dataframe_compat.py`. In v1.2 only the coverage scripts had
+been exercised, which is why the pandas 3 incompatibility fixed in v1.2.2 went
+unnoticed.
+
+### Testing
+
+```bash
+python tests/test_stress_dataframe_compat.py
+```
+
+A dependency-free regression test for the four perturbation functions in
+`src/evaluation/stress.py`: it checks that they run without writing through a
+read-only `DataFrame.values`, do not mutate the caller's frame, preserve index,
+columns, shape and dtype, are deterministic for a fixed seed, and still have
+their intended effect. 6/6 pass under both validated environments.
 
 ## Project Structure
 
@@ -152,6 +171,14 @@ Consequences:
   `np.quantile` conformal quantile with an exact order statistic. Point-estimate
   metrics (MAE, CCC) and the uncertainty diagnostics are unaffected by that
   change.
+- **The two `low_depth_*` Tier 1 scenarios are numpy-version sensitive.**
+  `apply_low_depth` draws from `numpy.random.Generator.binomial`, whose stream
+  differs between numpy 2.4.6 and 2.5.3 for some `(n, p)`. Re-running under the
+  two validated environments changes those two scenarios by at most 3.6e-04;
+  the other seven Tier 1 scenarios and all of Tier 2 are bit-identical. Pin
+  numpy if you need `low_depth` reproduced exactly. This is a property of numpy,
+  not of CalibDeconv, and it does not affect any value reported in the
+  manuscript.
 
 ## Composition-level coverage analyses
 

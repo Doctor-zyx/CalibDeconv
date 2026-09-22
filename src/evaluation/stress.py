@@ -29,8 +29,9 @@ def apply_dropout(bulk: pd.DataFrame, dropout_rate: float = 0.3, seed: int = 42)
     """Randomly zero out a fraction of entries."""
     rng = np.random.default_rng(seed)
     mask = rng.random(bulk.shape) > dropout_rate
-    result = bulk.copy()
-    result.values[~mask] = 0.0
+    arr = bulk.to_numpy(copy=True)
+    arr[~mask] = 0.0
+    result = pd.DataFrame(arr, index=bulk.index, columns=bulk.columns)
     logger.info("Dropout rate=%.2f: %.1f%% entries zeroed", dropout_rate, 100 * (1 - mask.mean()))
     return result
 
@@ -38,10 +39,12 @@ def apply_dropout(bulk: pd.DataFrame, dropout_rate: float = 0.3, seed: int = 42)
 def apply_gaussian_noise(bulk: pd.DataFrame, noise_std: float = 0.5, seed: int = 42) -> pd.DataFrame:
     """Add Gaussian noise N(0, noise_std * gene_std) to each gene."""
     rng = np.random.default_rng(seed)
-    gene_stds = bulk.values.std(axis=0, keepdims=True)
+    values = bulk.to_numpy()
+    gene_stds = values.std(axis=0, keepdims=True)
     noise = rng.normal(0, noise_std, size=bulk.shape) * gene_stds
-    result = bulk.copy()
-    result.values[:] = np.clip(bulk.values + noise, 0, None)
+    arr = bulk.to_numpy(copy=True)
+    arr[:] = np.clip(values + noise, 0, None)
+    result = pd.DataFrame(arr, index=bulk.index, columns=bulk.columns)
     logger.info("Gaussian noise std=%.2f", noise_std)
     return result
 
@@ -92,13 +95,14 @@ def apply_low_depth(bulk: pd.DataFrame, depth_fraction: float = 0.25, seed: int 
         logger.info("Low depth fraction=%.2f (raw count downsampling -> CPM)", depth_fraction)
     else:
         # Legacy: thinning integerized CPM values
-        result = bulk.copy()
-        counts = result.values.astype(int)
+        arr = bulk.to_numpy(copy=True)
+        counts = arr.astype(int)
         for i in range(counts.shape[0]):
             for j in range(counts.shape[1]):
                 if counts[i, j] > 0:
                     counts[i, j] = rng.binomial(counts[i, j], depth_fraction)
-        result.values[:] = counts.astype(float)
+        arr[:] = counts.astype(float)
+        result = pd.DataFrame(arr, index=bulk.index, columns=bulk.columns)
         logger.info("Low depth fraction=%.2f (integerized-CPM thinning, no raw counts)", depth_fraction)
 
     return result
@@ -114,8 +118,9 @@ def apply_batch_shift(
     n = bulk.shape[0]
     n_shift = max(1, int(n * batch_fraction))
     batch_idx = rng.choice(n, size=n_shift, replace=False)
-    result = bulk.copy()
-    result.values[batch_idx] = np.clip(result.values[batch_idx] + shift_size, 0, None)
+    arr = bulk.to_numpy(copy=True)
+    arr[batch_idx] = np.clip(arr[batch_idx] + shift_size, 0, None)
+    result = pd.DataFrame(arr, index=bulk.index, columns=bulk.columns)
     logger.info("Batch shift size=%.2f on %d/%d samples", shift_size, n_shift, n)
     return result
 
